@@ -1,1 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneio Clash Royale</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1c23;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #ffcc00;
+            text-shadow: 2px 2px 4px #000;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            background-color: #252836;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid #3b3e51;
+            background-color: #1f222e;
+            color: white;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ffcc00;
+        }
+
+        button {
+            background-color: #ffcc00;
+            color: #1a1c23;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #e6b800;
+        }
+
+        .bracket {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            gap: 40px;
+        }
+
+        .matchup {
+            background-color: #252836;
+            border: 2px solid #3b3e51;
+            border-radius: 8px;
+            width: 180px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .player {
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+            border-bottom: 1px solid #3b3e51;
+        }
+
+        .player:last-child {
+            border-bottom: none;
+        }
+
+        .player:hover {
+            background-color: #2f3347;
+            color: #ffcc00;
+        }
+
+        .player.winner {
+            background-color: #2e7d32 !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .round-title {
+            text-align: center;
+            font-weight: bold;
+            color: #a5a6f6;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Campeonato Clash Royale</h1>
+
+    <div class="container" id="setup-container">
+        <h3 style="margin-top:0;">Digite o Nick dos 4 Jogadores:</h3>
+        <div class="form-group">
+            <input type="text" id="p1" placeholder="Jogador 1" value="Player A">
+            <input type="text" id="p2" placeholder="Jogador 2" value="Player B">
+            <input type="text" id="p3" placeholder="Jogador 3" value="Player C">
+            <input type="text" id="p4" placeholder="Jogador 4" value="Player D">
+        </div>
+        <button onclick="gerarTorneio()" style="width: 100%;">Sortear Chaves</button>
+    </div>
+
+    <div class="bracket" id="bracket-container" style="display: none;">
+        
+        <!-- Semifinais -->
+        <div>
+            <div class="round-title">Semifinais</div>
+            <div class="round">
+                <div class="matchup">
+                    <div class="player" id="semi1-p1" onclick="avancar(this, 'final-p1')">-</div>
+                    <div class="player" id="semi1-p2" onclick="avancar(this, 'final-p1')">-</div>
+                </div>
+                <div class="matchup">
+                    <div class="player" id="semi2-p1" onclick="avancar(this, 'final-p2')">-</div>
+                    <div class="player" id="semi2-p2" onclick="avancar(this, 'final-p2')">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grande Final -->
+        <div>
+            <div class="round-title">Grande Final</div>
+            <div class="round">
+                <div class="matchup">
+                    <div class="player" id="final-p1" onclick="definirCampeao(this)">-</div>
+                    <div class="player" id="final-p2" onclick="definirCampeao(this)">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campeão -->
+        <div>
+            <div class="round-title">👑 Campeão</div>
+            <div class="round">
+                <div class="matchup" style="border-color: #ffcc00;">
+                    <div class="player" id="campeao" style="background-color: #3a3116; color: #ffcc00; font-weight: bold; cursor: default; padding: 20px;">-</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button id="btn-reiniciar" onclick="reiniciar()" style="display: none; margin-top: 30px; background-color: #3b3e51; color: white;">Criar Novo Torneio</button>
+
+    <script>
+        function embaralhar(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function gerarTorneio() {
+            const p1 = document.getElementById('p1').value.trim() || 'Jogador 1';
+            const p2 = document.getElementById('p2').value.trim() || 'Jogador 2';
+            const p3 = document.getElementById('p3').value.trim() || 'Jogador 3';
+            const p4 = document.getElementById('p4').value.trim() || 'Jogador 4';
+
+            let jogadores = [p1, p2, p3, p4];
+            embaralhar(jogadores);
+
+            // Preenche Semifinal 1
+            document.getElementById('semi1-p1').innerText = jogadores[0];
+            document.getElementById('semi1-p2').innerText = jogadores[1];
+
+            // Preenche Semifinal 2
+            document.getElementById('semi2-p1').innerText = jogadores[2];
+            document.getElementById('semi2-p2').innerText = jogadores[3];
+
+            // Exibe as chaves na tela
+            document.getElementById('setup-container').style.display = 'none';
+            document.getElementById('bracket-container').style.display = 'flex';
+            document.getElementById('btn-reiniciar').style.display = 'block';
+        }
+
+        function avancar(elementoClicado, idDestino) {
+            // Remove destaque anterior do mesmo confronto
+            const pai = elementoClicado.parentElement;
+            const irmaos = pai.children;
+            for (let irmao of irmaos) {
+                irmao.classList.remove('winner');
+            }
+
+            // Destaca o vencedor atual
+            elementoClicado.classList.add('winner');
+
+            // Passa o nome para a próxima fase
+            const nomeVencedor = elementoClicado.innerText;
+            document.getElementById(idDestino).innerText = nomeVencedor;
+            
+            // Limpa o campeão caso mudem o vencedor da semifinal no meio do processo
+            document.getElementById('campeao').innerText = '-';
+            document.getElementById('final-p1').classList.remove('winner');
+            document.getElementById('final-p2').classList.remove('winner');
+        }
+
+        function definirCampeao(elementoClicado) {
+            if (elementoClicado.innerText === '-') return;
+
+            const pai = elementoClicado.parentElement;
+            const irmaos = pai.children;
+            for (let irmao of irmaos) {
+                irmao.classList.remove('winner');
+            }
+
+            elementoClicado.classList.add('winner');
+            document.getElementById('campeao').innerText = '🏆 ' + elementoClicado.innerText;
+        }
+
+        function reiniciar() {
+            // Reseta classes visuais
+            const players = document.querySelectorAll('.player');
+            players.forEach(p => {
+                p.classList.remove('winner');
+                p.innerText = '-';
+            });
+
+            document.getElementById('setup-container').style.display = 'block';
+            document.getElementById('bracket-container').style.display = 'none';
+            document.getElementById('btn-reiniciar').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
 
